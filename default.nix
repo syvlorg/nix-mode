@@ -1,3 +1,9 @@
-(import (fetchTarball https://github.com/edolstra/flake-compat/archive/master.tar.gz) {
-  src = ./.;
-}).defaultNix
+# Adapted from https://github.com/edolstra/flake-compat#usage:
+
+with builtins; if (builtins ? getFlake) then (getFlake (toString ./.)) else (import fetchTarball (let
+    lockExists = pathExists ./flake.lock;
+    lock = if lockExists then (fromJSON (readFile ./flake.lock)) else { nodes.flake-compat.locked.rev = "master"; };
+in {
+    url = "https://github.com/edolstra/flake-compat/archive/${lock.nodes.flake-compat.locked.rev}.tar.gz";
+    ${if lockExists then "sha256" else null} = lock.nodes.flake-compat.locked.narHash;
+}) { src = ./.; }).defaultNix
